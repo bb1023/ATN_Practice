@@ -1,0 +1,7 @@
+{
+    "juliaFormatter.alwaysForIn": true,
+    "juliaFormatter.removeExtraNewlines": true,
+    "juliaFormatter.style": "yas",
+    "juliaFormatter.whitespaceTypedefs": true,
+    "juliaFormatter.whitespaceOpsInIndices": true
+}
