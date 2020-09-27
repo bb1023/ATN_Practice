@@ -7,7 +7,8 @@ using Statistics
 function time_series_par(matrix, Ni, N, m, EtaMax, mu, tmax)
     eta = matrix[1]
     lambda = matrix[2]
-    
+    ITrend = zeros(Int, 0)
+
     Ni = Int(0.01 * N)  # initial number of infects
     gamma = -2.22       # exponent of the power law
     tolerance = 1e-10   # termination tolerance
@@ -128,7 +129,7 @@ function number_infected_eta(N, AgentState, AgentAct, lambda, eta, EtaMax,  mu, 
     InfectedIndices = [k[1] for k in findall(InfectedIndicesBool)]
 
     for j in InfectedIndices
-        ConnectedSusceptibles=zeros(Bool, N)
+        ConnectedSusceptibles = zeros(Bool, N)
         for k in 1:N
             ConnectedSusceptibles[k] = AdjMatrix[j, k] & (~AgentState[k]) 
         end # find individuals connected to an infected that are susceptible
@@ -143,7 +144,7 @@ function number_infected_eta(N, AgentState, AgentAct, lambda, eta, EtaMax,  mu, 
         AgentStateNext[k] = (rand() < mu) 
     end
     # process I - > S (it is independent from the network connections)
-    push!(ITrend, Int(sum(AgentState)))
+    push!(ITrend, Int(sum(AgentStateNext)))
     if t > (TMinConvergence + TWindow)
         termination = (abs(mean(ITrend[t - TWindow:t - 1]) - mean(ITrend[t - TWindow + 1:t])) < tolerance);
     else
@@ -155,5 +156,62 @@ function number_infected_eta(N, AgentState, AgentAct, lambda, eta, EtaMax,  mu, 
 end
 
 
+
+function infected_c(i_time, AgentState, AgentAct, m, mu, lambda, etaS, eta, InfectedOverATrial, tmax, TWindow)
+    # AgentState = zeros(Bool, N)
+    N = length(AgentAct)
+    # AgentState = zeros(Bool, N)
+    # AgentState[1:Ni] .= 1
+    AgentStateNext = AgentState
+    for i in 1:N
+        if AgentState[i] == 1
+            if rand() < mu
+                AgentStateNext[i] = 0
+            end
+        end
+        Activity = (1 - AgentState[i]) * (etaS * AgentAct[i]) + AgentState[i] * (eta * AgentAct[i])
+        if Activity > rand()
+            for j in 1:m
+                rInt = Int(round(rand() * (N - 1) + 1))
+                if AgentState[i] == 1
+                    if ((AgentState[rInt] == 0) && (rand() < lambda) )
+                        AgentStateNext[rInt] = 1
+                    end
+                else
+                    if ((AgentState[rInt] == 1) && (rand() < lambda) )
+                        AgentStateNext[i] = 1
+                    end
+                end
+            end
+        end
+    end
+    NumInf = 0
+    for i = 1:N
+        AgentState[i] = AgentStateNext[i]
+        if AgentState[i] == 1
+            NumInf = NumInf + 1
+        end
+    end
+    if i_time > (tmax - TWindow)
+        InfectedOverATrial = InfectedOverATrial + NumInf
+    end
+    return InfectedOverATrial, AgentState
+ 
+end
+    
+function avg_infected(N, NTrials, m, mu, eta, lambda, etaS,  AgentAct, tmax, TWindow)
+    InfectedOverTrials = 0
+    for nt in 1:NTrials
+        AgentState = zeros(Bool, N)
+        AgentState[1:Int(.01 * N)] .= 1
+        InfectedOverATrial = 0.0
+        for i_time in 1:tmax
+            InfectedOverATrial, AgentState = infected_c(i_time, AgentState, AgentAct, m, mu, lambda, etaS, eta, InfectedOverATrial, tmax, TWindow)
+        end
+        InfectedOverATrial = InfectedOverATrial / TWindow
+        InfectedOverTrials = InfectedOverTrials + InfectedOverATrial
+    end
+    return InfectedOverTrials / NTrials
+end
 
 end
