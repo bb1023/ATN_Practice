@@ -1,61 +1,35 @@
 using Statistics
-N = 10000         #number of nodes
-m = 3               #number of active links per active node
-mu = 0.1            #probability I -> S
-tmax = 6000         #maximum duration of the simulation
-Ni = Int(0.1*N)     #initial number of infects
-ActMin = 0.001      #minimum activation probability
-ActMax = 1          #maximum activation probability
-gamma = -2.22       #exponent of the power law
+using ProgressMeter
+using MATLAB
+include("atn_module.jl")
+N = 10_000          # number of nodes
+m = 5               # number of active links per active node
+mu = 0.1            # probability I -> S
+tmax = 3000         # maximum duration of the simulation
+Ni = Int(0.01 * N)  # initial number of infects
+gamma = -2.22       # exponent of the power law
+NTrials = 5         # number of trials for each value of lambda
+tolerance = 1e-10   # termination tolerance
+TWindow = 500      # time window for evaluating steady state
+TMinConvergence = 500
 
-AgentAct=rand(N,1);
-AgentAct = ((ActMax.^(gamma+1) - ActMin.^(gamma+1)).*AgentAct.+ ActMin.^(gamma+1)).^(1. /(gamma+1))
-AvgDegree = 2*m*mean(AgentAct)
+LambdaMin = 0.0
+LambdaMax = 1.0
+LambdaStep = 0.05
+Lambda = LambdaMin:LambdaStep:LambdaMax
+LambdaSize = length(Lambda)
 
-NTrials = 5         #number of trials for each value of lambda
-
-tolerance = 1e-15   #termination tolerance
-TWindow = 1000      #time window for evaluating steady state
-TMinConvergence=500
-
-
-#health state of agents S=0 I=1
-AgentState=zeros(N)
-AgentStateNext=zeros(N)
-AgentState[1:Ni].=1.0
-
-#diffferent lambda
-# lambda=0.1:0.1:1;
-# IAvgLambda=zeros(length(lambda))
-# beta=zeros(length(lambda))
-
-lambda=.2
-termination=1.0
-t=1;
-
-
-termination = false 
-t=2
-AdjMatrix=zeros(N,N)
-ActiveIndicesBool=[ rand()<agentAct for agentAct in AgentAct]
-
-println(sum(ActiveIndicesBool))
-indx=[ k[1] for k in findall(ActiveIndicesBool)]
-for i in indx
-    pick_from=setdiff(1:N, i)
-    ContactedAgents=rand(pick_from,m)
-    AdjMatrix[i, ContactedAgents] .= 1
-    AdjMatrix[ContactedAgents,i] .= 1 # connections are bilateral!
+EtaMin = 0.0
+EtaMax = 15
+EtaStep = 0.5
+Eta = EtaMin:EtaStep:EtaMax
+EtaSize = length(Eta)
+IT=zeros(EtaSize,LambdaSize)
+@showprogress for (i,lambda) in enumerate(Lambda)
+    for (j,eta) in enumerate(Eta)
+        ITrend = time_series_eta(Ni, N, m, eta, EtaMax, gamma, lambda, mu, tolerance,
+                                 TWindow, TMinConvergence, tmax)
+        IT[j,i]=ITrend[end]
+    end
 end
-
-# connections are bilateral!
-AgentStateNext=AgentState
-
-InfectedIndicesBool = [agentState==1 for agentState in AgentState]
-InfectedIndices=[ k[1] for k in findall(InfectedIndicesBool)]
-
-for j in InfectedIndices
-    ConnectedSusceptibles  = double(AdjMatrix(InfectedIndices(j),:) & (~AgentState')); #find individuals connected to an infected that are susceptible
-    ConnSuscIndices = find(ConnectedSusceptibles == 1); #find their indices
-    AgentStateNext(ConnSuscIndices)=(rand(length(ConnSuscIndices),1)<lambda); #infection process S->I on the susceptible and connected;
-end
+# mat"plot($ITrend)"
