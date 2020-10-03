@@ -16,7 +16,6 @@ TMinConvergence = 500
 
 # health state of agents S=0 I=1
 
-
 # diffferent lambda
 # lambda=0.1:0.1:1;
 # IAvgLambda=zeros(length(lambda))
@@ -24,7 +23,7 @@ TMinConvergence = 500
 
 lambda = 0.2
 
+ITrend = atn_module.time_series(Ni, N, m, gamma, lambda, mu, tolerance, TWindow,
+                                TMinConvergence, tmax);
 
-ITrend = atn_module.time_series(Ni, N, m, gamma, lambda, mu, tolerance, TWindow, TMinConvergence, tmax);
-
-# mat"plot($ITrend)"
+mat"plot($ITrend)"

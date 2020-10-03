@@ -1,3 +1,4 @@
+using Distributed
 using Statistics
 using ProgressMeter
 using MATLAB
@@ -35,13 +36,14 @@ end
 
 infected = @showprogress pmap(
     atn_module.time_series_par,
-   [(eta, lambda) for eta in Eta, lambda in Lambda],
+    [(eta, lambda) for eta in Eta, lambda in Lambda],
     Ni * ones(Int, EtaSize, LambdaSize),
-    N * ones(Int, EtaSize, LambdaSize), 
-    m * ones(Int, EtaSize, LambdaSize), 
+    N * ones(Int, EtaSize, LambdaSize),
+    m * ones(Int, EtaSize, LambdaSize),
     EtaMax * ones(EtaSize, LambdaSize),
     mu * ones(EtaSize, LambdaSize),
-    tmax * ones(Int, EtaSize, LambdaSize))
+    tmax * ones(Int, EtaSize, LambdaSize),
+)
 
-
+infected = float64.(transpose(infected))
 mat"imagesc($infected)"

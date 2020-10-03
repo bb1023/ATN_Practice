@@ -24,12 +24,12 @@ EtaMax = 15
 EtaStep = 0.5
 Eta = EtaMin:EtaStep:EtaMax
 EtaSize = length(Eta)
-IT=zeros(EtaSize,LambdaSize)
-@showprogress for (i,lambda) in enumerate(Lambda)
-    for (j,eta) in enumerate(Eta)
+IT = zeros(EtaSize, LambdaSize)
+@showprogress for (i, lambda) in enumerate(Lambda)
+    for (j, eta) in enumerate(Eta)
         ITrend = time_series_eta(Ni, N, m, eta, EtaMax, gamma, lambda, mu, tolerance,
                                  TWindow, TMinConvergence, tmax)
-        IT[j,i]=ITrend[end]
+        IT[j, i] = ITrend[end]
     end
 end
 # mat"plot($ITrend)"
