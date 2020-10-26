@@ -184,7 +184,7 @@ function infected_totals(
     dead_1 = 0.0
     dead_2 = 0.0
     for k = 1:N
-        if agent_state_2[k] == 3
+        if agent_state_1[k] == 3
             dead_1 = dead_1 + 1
         end
         # if agent_state_2[k] == 3
@@ -203,10 +203,10 @@ function parameter_sweep(n_trials, agent_act_1, agent_act_2, grid)
     lambda_2 =  grid[2]
     lambda_1 = lambda_2
     m = 3
-    tmax = 500
+    tmax = 1000
     total_1 = 0.0
     total_2 = 0.0
-    gamma_1 = .2
+    gamma_1 = .1
     gamma_2 = .01
     for k = 1:n_trials
         infected_1 = infected_totals(

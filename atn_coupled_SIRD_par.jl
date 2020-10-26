@@ -11,17 +11,17 @@ include("ATN_Coupled_SIRD.jl")
     using MAT
     using Dates
     include("ATN_Coupled_SIRD.jl")
-    N = 10_000          # number of nodes
+    N = 100_000          # number of nodes
     m = 5               # number of active links per active node
     tmax = 1000         # maximum duration of the simulation
     Ni = Int(0.01 * N)  # initial number of infects
     gamma = -2.1        # exponent of the power law
-    lambda_size = 500
+    lambda_size = 20
     lambda_min = 0.0
     lambda_max =1
-    n_trials = 5
+    n_trials = 1
     Lambda = range(lambda_min, stop = lambda_max, length = lambda_size)
-    beta_size =500
+    beta_size =20
     beta_min = 0.0
     beta_max = 1
     Beta = range(beta_min, stop = beta_max, length = beta_size)
@@ -75,4 +75,4 @@ matwrite(mat_name, Dict("Dead" => Dead); compress = true)
 mat"figure();set(gcf, 'Position',  [0, 0, 2500, 1500]); hold on;"
 mat"axis([ -0,1,-0,10 ])"
 mat"imagesc([0,1],[0,10],$Dead,[0,.5])"
-mat"colorbar;colormap jet"
+mat"colorbar;colormap('inferno')"
