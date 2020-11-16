@@ -1,4 +1,4 @@
-module ATN_Coupled_SIRD
+module ADN_Coupled_assholes_threshold
 export time_series_par
 export time_series_eta
 export time_series
@@ -15,15 +15,16 @@ function infected_c(
     alpha,
     N_good,
     N_asshole,
+    C_1, 
+    C_2
 )
 
     N = N_good + N_asshole
-    AgentStateNext_1 = zeros(Bool, N_good)
-    AgentStateNext_2 = zeros(Bool, N_asshole)
+    AgentStateNext_1 = zeros(Int, N_good)
+    AgentStateNext_2 = zeros(Int, N_asshole)
     for k = 1:N_good
         AgentStateNext_1[k] = agent_state_1[k]
     end
-
     for k = 1:N_asshole
         AgentStateNext_2[k] = agent_state_2[k]
     end
@@ -31,7 +32,7 @@ function infected_c(
     for k = 1:N_good
         if agent_state_1[k] == 1
             if rand() < mu
-                AgentStateNext_1[k] = 0
+                AgentStateNext_1[k] = 2
             end
         end
     end
@@ -39,7 +40,7 @@ function infected_c(
     for k = 1:N_asshole
         if agent_state_2[k] == 1
             if rand() < mu
-                AgentStateNext_2[k] = 0
+                AgentStateNext_2[k] = 2
             end
         end
     end
@@ -105,7 +106,7 @@ function infected_c(
 
                     if rInt <= N_good
 
-                        # the good active node gets the good s sick
+                        # the good active node gets the good neigbor sick
                         if agent_state_2[i] == 1
                             if (
                                 (agent_state_1[rInt] == 0) &&
@@ -150,8 +151,9 @@ function infected_c(
     # end
 
 
-    return AgentStateNext_1, AgentStateNext_2
-
+    C_1 = C_1 .| .!iszero.(AgentStateNext_1)
+    C_2 = C_2 .| .!iszero.(AgentStateNext_2)
+    return AgentStateNext_1, AgentStateNext_2, C_1, C_2
 end
 
     function infected_totals(
@@ -165,19 +167,20 @@ end
     N_good,
     N_asshole,
 )
-    agent_state_1 = zeros(Bool, N_good)
-    agent_state_2 = zeros(Bool, N_asshole)
-
+    agent_state_1 = zeros(Int, N_good)
+    agent_state_2 = zeros(Int, N_asshole)
+    C_1 = agent_state_1
+    C_2 = agent_state_2
     # Iend_1 = zeros(tmax)
     for k = 1:100
         agent_state_1[k] = 1
         agent_state_2[k] = 1
     end
 
-    t_window = 500
-    total_infected = 0
+    t_window = 0
+    time = 0
     for i_time = 1:tmax
-        agent_state_1, agent_state_2 = infected_c(
+        agent_state_1, agent_state_2, C_1, C_2 = infected_c(
             agent_state_1,
             agent_state_2,
             activity_good,
@@ -188,17 +191,18 @@ end
             alpha,
             N_good,
             N_asshole,
+            C_1,
+            C_2
         )
-        Infect = sum(agent_state_1) + sum(agent_state_2)
-        if Infect < 10
+        time = time + 1
+        
+        T = sum([a==1 for a in agent_state_1]) + sum([a==1 for a in  agent_state_2])
+        L = (sum(C_1) + sum(C_2)) / (N_good + N_asshole) 
+        if T < 10 || L > .5
             break
         end
-        if i_time > (tmax - t_window)
-            total_infected = total_infected + Infect
-        end
     end
-
-    return total_infected / t_window
+    return time
 end
 
     function parameter_sweep(n_trials, activity, grid)
@@ -206,8 +210,8 @@ end
     proportion = grid[1]
     proportion = 1 - proportion
     # proportion =.1
-    lambda = .34
-    alpha = .7
+    lambda = .1
+    alpha = .75
     N_assholes = Int(ceil((proportion * N)))
     N_good = N - N_assholes
     activity_asshole = zeros(N_assholes)
@@ -222,33 +226,63 @@ end
 
 
     eta_ratio = 1
-
-    # recovery rate
     mu = 0.1
     # infection rate
 
-
+    alpha_min = 0.0
+    alpha_max = 1
+    Lambda = range(alpha_min, stop = alpha_max, length = n_trials)
+    Alpha = Lambda
     m = 5
-    tmax = 5000
+    tmax = 3e3
     total_1 = 0.0
     total_2 = 0.0
-
-    for k = 1:n_trials
-        infected_1 = infected_totals(
+    n = 5
+    trials = zeros(n)
+    for i in 1:n
+        extinction = zeros(n_trials)
+        for k in 1:n_trials
+            extinction[k] = infected_totals(
             tmax,
-            (2.5+eta_ratio*2.5) * activity_good,
+            eta_ratio * 5 * activity_good,
             5 * activity_asshole,
             m,
             mu,
-            lambda,
+            Lambda[k],
             alpha,
             N_good,
             N_assholes,
         )
-        total_1 = total_1 + infected_1 / (N)
-        # total_2 = total_2 + infected_2 / (N)
 
+
+        end
+        val, index =  findmax(extinction)
+        trials[i] = Lambda[index]
+
+        # if abs(mean(Lambda[end-20:end])-val)>10
+        #     trials[i] = Lambda[index]
+        # else
+        #     trials[i]=n_trials
+        # end
     end
-    return total_1 / n_trials
+    # for k = 1:n_trials
+    #     infected_1, i_time = infected_totals(
+    #         tmax,
+    #         eta_ratio * 5 * activity_good,
+    #         5 * activity_asshole,
+    #         m,
+    #         mu,
+    #         lambda,
+    #         alpha,
+    #         N_good,
+    #         N_assholes,
+    #     )
+    #     total_1 = total_1 + infected_1 
+    #     total_2 = total_2 + i_time
+
+    # end
+    return  mean(trials) # ,total_1 / n_trials
 end
+
+
 end

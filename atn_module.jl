@@ -1,7 +1,5 @@
 module atn_module
-export time_series_par
-export time_series_eta
-export time_series
+
 using Statistics
 
 function infected_c(
@@ -31,10 +29,12 @@ function infected_c(
                 AgentStateNext[i] = 0
             end
         end
+        # Activity =
+        #     (1 - AgentState[i]) * (etaS * AgentAct[i]) +
+        #     AgentState[i] * (eta * AgentAct[i])
         Activity =
-            (1 - AgentState[i]) * (etaS * AgentAct[i]) +
+            (1 - AgentState[i]) * (eta * AgentAct[i]) +
             AgentState[i] * (eta * AgentAct[i])
-
 
         if Activity > rand()
             for j = 1:m

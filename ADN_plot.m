@@ -19,7 +19,8 @@ result=compute_threshold(Dead,Alpha);
 plot(Proportion,result, 'w--', 'LineWidth',5)
 Alpha = linspace(alpha_min,  alpha_max,1000);
 lambda_mu=fa(.5,.8,Alpha)/2.2655;
-% result=threshold( .8, 4.5310, Proportion);
+hold on
+% result=real(threshold( .6, 0.8828/2, Proportion));
 plot(Alpha,.1*lambda_mu,  'LineWidth',10)
 % plot(Proportion,result,  'LineWidth',5)
 % plot(Proportion,result, 'w--', 'LineWidth',5)
@@ -28,11 +29,11 @@ plot(Alpha,.1*lambda_mu,  'LineWidth',10)
 
 title(" Proportion Infected: GOOD ",'FontSize',40)
 % title("Meta-population: Good, $\alpha=0.25$",'FontSize',40)
-xlabel("$\eta^{(g)}/\eta^{(b)}$",'FontSize',40)
+% xlabel("$\eta^{(g)}/\eta^{(b)}$",'FontSize',40)
 ylabel("$\lambda$",'FontSize',40)
 
 % xlabel("$\alpha$",'FontSize',40)
-% xlabel("$\beta$",'FontSize',40)
+xlabel("$\beta$",'FontSize',40)
 
 % ylabel("$\alpha$",'FontSize',40)
 

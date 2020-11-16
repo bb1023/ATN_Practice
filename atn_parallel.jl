@@ -13,9 +13,9 @@ include("atn_module.jl")
     N = 10_000          # number of nodes
     m = 5               # number of active links per active node
     mu = 0.1            # probability I -> S
-    tmax = 100         # maximum duration of the simulation
+    tmax = 10000         # maximum duration of the simulation
     Ni = Int(0.01 * N)  # initial number of infects
-    gamma = -2.22       # exponent of the power law
+    gamma = -2.1   # exponent of the power law
     NTrials = 5         # number of trials for each value of lambda
     tolerance = 1e-10   # termination tolerance
     TWindow = 500      # time window for evaluating steady state
@@ -28,9 +28,9 @@ include("atn_module.jl")
     LambdaSize = length(Lambda)
 
     EtaMin = 0.0
-    EtaMax = 15
+    EtaMax = 5
     EtaStep = 0.5
-    Eta = EtaMin:EtaStep:EtaMax
+    Eta = 5
     EtaSize = length(Eta)
 end
 
